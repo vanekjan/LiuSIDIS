@@ -1,5 +1,5 @@
-#ifndef _SOLID_SIDIS_NH3_H_
-#define _SOLID_SIDIS_NH3_H_
+#ifndef _TENSOR_SIDIS_ND3_H_
+#define _TENSOR_SIDIS_ND3_H_
 
 #include "TFile.h"
 #include "TH1D.h"
@@ -10,12 +10,36 @@
 #include "TStyle.h"
 #include "TTree.h"
 #include "TChain.h"
+#include "TVector3.h"
 
 #include "Lsidis.h"
 
-// Setting
+using namespace std;
+
+//set numbers of protons and neutrons of target nucleus
+/*
+//from SoLID sidis 2020
 const double Np = 0.844 / 3.0 * 10.0 + 0.69 / 2.0 + 0.47 / 2.0;
-const double Nn = 0.844 / 3.0 * 7.0 + 0.69 / 2.0 + 0.47 / 2.0;
+
+//const double Nn = 0.844 / 3.0 * 7.0 + 0.69 / 2.0 + 0.47 / 2.0; //for NH3
+const double Nn = 0.844 / 3.0 * 10.0 + 0.69 / 2.0 + 0.47 / 2.0; //for ND3
+
+//---------------------------
+
+//from base SoLID folder
+const double Np = 0.334*10.0+0.593*2.0;
+
+//const double Nn = 0.334*7.0+0.593*2.0; //for NH3
+const double Nn = 0.334*10.0+0.593*2.0;   //for ND3
+*/
+//---------------------------
+//pure deuteron, deal with dilution later
+
+const double Np = 1;
+
+const double Nn = 1;
+
+//---------------------------
 
 // Acceptance 
 TFile * file_e = new TFile("Acceptance/acceptance_solid_SIDIS_NH3_electron_201710_1e7_output_final.root", "r");
@@ -35,7 +59,6 @@ TH3F * acc_FA_km = (TH3F *) file_km->Get("acceptance_ThetaPhiP_forwardangle");
 TH3F * acc_LA_km = (TH3F *) file_km->Get("acceptance_ThetaPhiP_largeangle");
 
 double Rfactor0 = 1.0e5;
-double pimin = 0.0;
 
 double GetAcceptance_e(const TLorentzVector p, const char * detector = "all"){//Get electron acceptance
   double theta = p.Theta() / M_PI * 180.0;
@@ -55,7 +78,6 @@ double GetAcceptance_pip(const TLorentzVector p){//Get pi+ acceptance
   double phi = p.Phi() / M_PI * 180.0;
   if (theta > 45.0) return 0;
   double mom = p.P();
-  if (mom < pimin) return 0;
   double acc = 0;
   acc += acc_FA_pip->GetBinContent(acc_FA_pip->GetXaxis()->FindBin(theta), acc_FA_pip->GetYaxis()->FindBin(phi), acc_FA_pip->GetZaxis()->FindBin(mom));
   return acc;
@@ -66,13 +88,12 @@ double GetAcceptance_pim(const TLorentzVector p){//Get pi+ acceptance
   double phi = p.Phi() / M_PI * 180.0;
   if (theta > 45.0) return 0;
   double mom = p.P();
-  if (mom < pimin) return 0;
   double acc = 0;
   acc += acc_FA_pim->GetBinContent(acc_FA_pim->GetXaxis()->FindBin(theta), acc_FA_pim->GetYaxis()->FindBin(phi), acc_FA_pim->GetZaxis()->FindBin(mom));
   return acc;
 }
 
-double PKmax = 6.0;
+double PKmax = 7.5;
 double GetAcceptance_Kp(const TLorentzVector p){//Get K+ acceptance
   double theta = p.Theta() / M_PI * 180.0;
   double phi = p.Phi() / M_PI * 180.0;
@@ -142,127 +163,197 @@ int GetTotalRate(const double Ebeam, const char * hadron){//Estimate the total r
   return 0;
 }
 
-int MakeKinematicCoveragePlots(const double Ebeam, const char * hadron, const char * savefile){
+int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char * hadron, const char * savefile)
+{
   Lsidis sidis;
+
   TLorentzVector l(0, 0, Ebeam, Ebeam);
-  TLorentzVector P(0, 0, 0, 0.938272);
+  //TLorentzVector P(0, 0, 0, 0.938272); //proton
+  //TLorentzVector P(0, 0, 0, 0.939565); //neutron
+  TLorentzVector P(0, 0, 0, 1.875612945); //deuteron
+
   sidis.SetNucleus(Np,Nn);
   sidis.SetHadron(hadron);
   if (strcmp(hadron, "pi+") == 0 || strcmp(hadron, "pi-") == 0) sidis.ChangeTMDpars(0.604, 0.114);
   if (strcmp(hadron, "K+") == 0 || strcmp(hadron, "K-") == 0) sidis.ChangeTMDpars(0.604, 0.131);
-  sidis.SetInitialState(l, P);
+  sidis.SetInitialState(l, P); //Set incoming lepton and nucleon 4-momenta
   sidis.SetPDFset("CJ15lo");
   sidis.SetFFset("DSSFFlo");
-  double Xmin[6] = {0.0, 1.0, 0.3, 0.0, -M_PI, -M_PI};
-  double Xmax[6] = {0.7, 9.0, 0.7, 2.0, M_PI, M_PI};
+
+  //set variable ranges for the simulation
+  //two possibilities based on selection in GenerateEvent()
+  //method == 0 - generate in x, y, z, Pt, phih, phiS
+  //method == 1 - generate in x, Q2, z, Pt, phih, phiS - this one is used now
+  double Xmin[6] = {0.05, 1.0, 0.3, 0.0, -M_PI, -M_PI}; //old phiS -M_PI
+  double Xmax[6] = {0.4, 3.0, 0.7, 2.0, M_PI, M_PI}; //old phiS M_PI
   sidis.SetRange(Xmin, Xmax);
+
   TFile * fs = new TFile(savefile, "RECREATE");
   gStyle->SetOptStat(0);
   //(x, Q2)
   TH2D * xQ2_FA = new TH2D("xQ2_FA", "", 700, 0.0, 0.7, 900, 0.0, 9.0);
   xQ2_FA->GetXaxis()->SetTitle("x");
   xQ2_FA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
-  TH2D * xQ2_LA = new TH2D("xQ2_LA", "", 700, 0.0, 0.7, 900, 0.0, 9.0);
-  xQ2_LA->GetXaxis()->SetTitle("x");
-  xQ2_LA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
+
+  //TH2D * xQ2_LA = new TH2D("xQ2_LA", "", 700, 0.0, 0.7, 900, 0.0, 9.0);
+  //xQ2_LA->GetXaxis()->SetTitle("x");
+  //xQ2_LA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
+
   //(x, W)
   TH2D * xW_FA = new TH2D("xW_FA", "", 700, 0.0, 0.7, 500, 2.0, 4.5);
   xW_FA->GetXaxis()->SetTitle("x");
   xW_FA->GetYaxis()->SetTitle("W / GeV");
-  TH2D * xW_LA = new TH2D("xW_LA", "", 700, 0.0, 0.7, 500, 2.0, 4.5);
-  xW_LA->GetXaxis()->SetTitle("x");
-  xW_LA->GetYaxis()->SetTitle("W / GeV");
+
+  //TH2D * xW_LA = new TH2D("xW_LA", "", 700, 0.0, 0.7, 500, 2.0, 4.5);
+  //xW_LA->GetXaxis()->SetTitle("x");
+  //xW_LA->GetYaxis()->SetTitle("W / GeV");
+
   //(x, Wp)
   TH2D * xWp_FA = new TH2D("xWp_FA", "", 700, 0.0, 0.7, 500, 1.5, 4.0);
   xWp_FA->GetXaxis()->SetTitle("x");
   xWp_FA->GetYaxis()->SetTitle("W' / GeV");
-  TH2D * xWp_LA = new TH2D("xWp_LA", "", 700, 0.0, 0.7, 500, 1.5, 4.0);
-  xWp_LA->GetXaxis()->SetTitle("x");
-  xWp_LA->GetYaxis()->SetTitle("W' / GeV");
+
+  //TH2D * xWp_LA = new TH2D("xWp_LA", "", 700, 0.0, 0.7, 500, 1.5, 4.0);
+  //xWp_LA->GetXaxis()->SetTitle("x");
+  //xWp_LA->GetYaxis()->SetTitle("W' / GeV");
+
   //(x, z)
   TH2D * xz_FA = new TH2D("xz_FA", "", 700, 0.0, 0.7, 600, 0.2, 0.8);
   xz_FA->GetXaxis()->SetTitle("x");
   xz_FA->GetYaxis()->SetTitle("z");
-  TH2D * xz_LA = new TH2D("xz_LA", "", 700, 0.0, 0.7, 600, 0.2, 0.8);
-  xz_LA->GetXaxis()->SetTitle("x");
-  xz_LA->GetYaxis()->SetTitle("z");
+
+  //TH2D * xz_LA = new TH2D("xz_LA", "", 700, 0.0, 0.7, 600, 0.2, 0.8);
+  //xz_LA->GetXaxis()->SetTitle("x");
+  //xz_LA->GetYaxis()->SetTitle("z");
+
   //(x, Pt)
   TH2D * xPt_FA = new TH2D("xPt_FA", "", 700, 0.0, 0.7, 800, 0.0, 2.0);
   xPt_FA->GetXaxis()->SetTitle("x");
   xPt_FA->GetYaxis()->SetTitle("P_{T} / GeV");
-  TH2D * xPt_LA = new TH2D("xPt_LA", "", 700, 0.0, 0.7, 800, 0.0, 2.0);
-  xPt_LA->GetXaxis()->SetTitle("x");
-  xPt_LA->GetYaxis()->SetTitle("P_{T} / GeV");
+
+  //TH2D * xPt_LA = new TH2D("xPt_LA", "", 700, 0.0, 0.7, 800, 0.0, 2.0);
+  //xPt_LA->GetXaxis()->SetTitle("x");
+  //xPt_LA->GetYaxis()->SetTitle("P_{T} / GeV");
+
   //(z, Pt)
   TH2D * zPt_FA = new TH2D("zPt_FA", "", 600, 0.2, 0.8, 800, 0.0, 2.0);
   zPt_FA->GetXaxis()->SetTitle("z");
   zPt_FA->GetYaxis()->SetTitle("P_{T} / GeV");
-  TH2D * zPt_LA = new TH2D("zPt_LA", "", 600, 0.2, 0.8, 800, 0.0, 2.0);
-  zPt_LA->GetXaxis()->SetTitle("z");
-  zPt_LA->GetYaxis()->SetTitle("P_{T} / GeV");
+
+  //TH2D * zPt_LA = new TH2D("zPt_LA", "", 600, 0.2, 0.8, 800, 0.0, 2.0);
+  //zPt_LA->GetXaxis()->SetTitle("z");
+  //zPt_LA->GetYaxis()->SetTitle("P_{T} / GeV");
+
   //(z, Q2)
   TH2D * zQ2_FA = new TH2D("zQ2_FA", "", 600, 0.2, 0.8, 900, 0.0, 9.0);
   zQ2_FA->GetXaxis()->SetTitle("z");
   zQ2_FA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
-  TH2D * zQ2_LA = new TH2D("zQ2_LA", "", 600, 0.2, 0.8, 900, 0.0, 9.0);
-  zQ2_LA->GetXaxis()->SetTitle("z");
-  zQ2_LA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
+
+  //TH2D * zQ2_LA = new TH2D("zQ2_LA", "", 600, 0.2, 0.8, 900, 0.0, 9.0);
+  //zQ2_LA->GetXaxis()->SetTitle("z");
+  //zQ2_LA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
+
   //(z, W)
   TH2D * zW_FA = new TH2D("zW_FA", "", 600, 0.2, 0.8, 500, 2.0, 4.5);
   zW_FA->GetXaxis()->SetTitle("z");
   zW_FA->GetYaxis()->SetTitle("W / GeV");
-  TH2D * zW_LA = new TH2D("zW_LA", "", 600, 0.2, 0.8, 500, 2.0, 4.5);
-  zW_LA->GetXaxis()->SetTitle("z");
-  zW_LA->GetYaxis()->SetTitle("W / GeV");
+
+  //TH2D * zW_LA = new TH2D("zW_LA", "", 600, 0.2, 0.8, 500, 2.0, 4.5);
+  //zW_LA->GetXaxis()->SetTitle("z");
+  //zW_LA->GetYaxis()->SetTitle("W / GeV");
+
   //(z, Wp)
   TH2D * zWp_FA = new TH2D("zWp_FA", "", 600, 0.2, 0.8, 500, 1.5, 4.0);
   zWp_FA->GetXaxis()->SetTitle("z");
   zWp_FA->GetYaxis()->SetTitle("W' / GeV");
-  TH2D * zWp_LA = new TH2D("zWp_LA", "", 600, 0.2, 0.8, 500, 1.5, 4.0);
-  zWp_LA->GetXaxis()->SetTitle("z");
-  zWp_LA->GetYaxis()->SetTitle("W' / GeV");
+
+  //TH2D * zWp_LA = new TH2D("zWp_LA", "", 600, 0.2, 0.8, 500, 1.5, 4.0);
+  //zWp_LA->GetXaxis()->SetTitle("z");
+  //zWp_LA->GetYaxis()->SetTitle("W' / GeV");
+
   //(Pt, Q2)
   TH2D * PtQ2_FA = new TH2D("PtQ2_FA", "", 800, 0.0, 2.0, 900, 0.0, 9.0);
   PtQ2_FA->GetXaxis()->SetTitle("P_{T} / GeV");
   PtQ2_FA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
-  TH2D * PtQ2_LA = new TH2D("PtQ2_LA", "", 800, 0.0, 2.0, 900, 0.0, 9.0);
-  PtQ2_LA->GetXaxis()->SetTitle("P_{T} / GeV");
-  PtQ2_LA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
+
+  //TH2D * PtQ2_LA = new TH2D("PtQ2_LA", "", 800, 0.0, 2.0, 900, 0.0, 9.0);
+  //PtQ2_LA->GetXaxis()->SetTitle("P_{T} / GeV");
+  //PtQ2_LA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
+
   //(Pt, W)
   TH2D * PtW_FA = new TH2D("PtW_FA", "", 800, 0.0, 2.0, 500, 2.0, 4.5);
   PtW_FA->GetXaxis()->SetTitle("P_{T} / GeV");
   PtW_FA->GetYaxis()->SetTitle("W / GeV");
-  TH2D * PtW_LA = new TH2D("PtW_LA", "", 800, 0.0, 2.0, 500, 2.0, 4.5);
-  PtW_LA->GetXaxis()->SetTitle("P_{T} / GeV");
-  PtW_LA->GetYaxis()->SetTitle("W / GeV");
+
+  //TH2D * PtW_LA = new TH2D("PtW_LA", "", 800, 0.0, 2.0, 500, 2.0, 4.5);
+  //PtW_LA->GetXaxis()->SetTitle("P_{T} / GeV");
+  //PtW_LA->GetYaxis()->SetTitle("W / GeV");
+
   //(Pt, Wp)
   TH2D * PtWp_FA = new TH2D("PtWp_FA", "", 800, 0.0, 2.0, 500, 1.5, 4.0);
   PtWp_FA->GetXaxis()->SetTitle("P_{T} / GeV");
   PtWp_FA->GetYaxis()->SetTitle("W' / GeV");
-  TH2D * PtWp_LA = new TH2D("PtWp_LA", "", 800, 0.0, 2.0, 500, 1.5, 4.0);
-  PtWp_LA->GetXaxis()->SetTitle("P_{T} / GeV");
-  PtWp_LA->GetYaxis()->SetTitle("W' / GeV");
+
+  //TH2D * PtWp_LA = new TH2D("PtWp_LA", "", 800, 0.0, 2.0, 500, 1.5, 4.0);
+  //PtWp_LA->GetXaxis()->SetTitle("P_{T} / GeV");
+  //PtWp_LA->GetYaxis()->SetTitle("W' / GeV");
+
   //(W, Q2)
   TH2D * WQ2_FA = new TH2D("WQ2_FA", "", 500, 2.0, 4.5, 900, 0.0, 9.0);
   WQ2_FA->GetXaxis()->SetTitle("W / GeV");
   WQ2_FA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
-  TH2D * WQ2_LA = new TH2D("WQ2_LA", "", 500, 2.0, 4.5, 900, 0.0, 9.0);
-  WQ2_LA->GetXaxis()->SetTitle("W / GeV");
-  WQ2_LA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
+
+  //TH2D * WQ2_LA = new TH2D("WQ2_LA", "", 500, 2.0, 4.5, 900, 0.0, 9.0);
+  //WQ2_LA->GetXaxis()->SetTitle("W / GeV");
+  //WQ2_LA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
+
   //(Wp, Q2)
   TH2D * WpQ2_FA = new TH2D("WpQ2_FA", "", 500, 1.5, 4.0, 900, 0.0, 9.0);
   WpQ2_FA->GetXaxis()->SetTitle("W' / GeV");
   WpQ2_FA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
-  TH2D * WpQ2_LA = new TH2D("WpQ2_LA", "", 500, 1.5, 4.0, 900, 0.0, 9.0);
-  WpQ2_LA->GetXaxis()->SetTitle("W' / GeV");
-  WpQ2_LA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
-  double x, Q2, z, Pt, W, Wp;
+
+  //TH2D * WpQ2_LA = new TH2D("WpQ2_LA", "", 500, 1.5, 4.0, 900, 0.0, 9.0);
+  //WpQ2_LA->GetXaxis()->SetTitle("W' / GeV");
+  //WpQ2_LA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
+  
+  //---------------------------------------------------------------------------
+  //basic kinematic plots
+  
+  TH1D *lepton_P = new TH1D("lepton_P", "lepton_P", 100, 0, 10);
+  TH1D *lepton_phi = new TH1D("lepton_phi", "lepton_phi", 360, -TMath::Pi(), TMath::Pi());
+  TH1D *lepton_theta_1 = new TH1D("lepton_theta_1", "lepton_theta_1", 360, -TMath::Pi(), TMath::Pi());
+  TH1D *lepton_theta_2 = new TH1D("lepton_theta_2", "lepton_theta_2", 360, -TMath::Pi(), TMath::Pi());
+  TH1D *lepton_eta = new TH1D("lepton_eta", "lepton_eta", 100, -5, 5);
+
+  TH1D *hadron_P = new TH1D("hadron_P", "hadron_P", 100, 0, 10);
+  TH1D *hadron_phi = new TH1D("hadron_phi", "hadron_phi", 360, -TMath::Pi(), TMath::Pi());
+  TH1D *hadron_theta_1 = new TH1D("hadron_theta_1", "hadron_theta_1", 360, -TMath::Pi(), TMath::Pi());
+  TH1D *hadron_theta_2 = new TH1D("hadron_theta_2", "hadron_theta_2", 360, -TMath::Pi(), TMath::Pi());
+  TH1D *hadron_eta = new TH1D("hadron_eta", "hadron_eta", 100, -5, 5);
+  
+  //---------------------------------------------------------------------------
+
+  //F_U(LL),T histograms
+
+  TH1D *F_UUT_hist = new TH1D("F_UUT_hist", "F_UUT_hist", 11, -0.1, 1);
+  TH1D *F_UUT_weight_hist = new TH1D("F_UUT_weight_hist", "F_UUT_weight_hist", 11, -0.1, 1);
+
+  TH1D *P_T_hist = new TH1D("P_T_hist", "P_T_hist", 11, -0.1, 1);
+  TH1D *P_T_weight_hist = new TH1D("P_T_weight_hist", "P_T_weight_hist", 11, -0.1, 1);
+
+  //---------------------------------------------------------------------------
+
+  double x, Q2, z, z_my, Pt, Pt_my, W, Wp;
   double weight, acc_FA, acc_LA;
   TLorentzVector lp, Ph;
-  for (Long64_t i = 0; i < 100000000; i++){
-    if (i % 1000000 == 0) std::cout << i << " %" << std::endl;
+
+  for (Long64_t i = 0; i < nEvents; i++)
+  {
+    //if (i % 1000000 == 0) std::cout << i*100/nEvents << " %" << std::endl; //original
+    if (i % nEvents/10 == 0) std::cout << i*100/nEvents << " %" << std::endl;
     weight = sidis.GenerateEvent(0, 1);
-    if (weight > 0){
+    if (weight > 0)
+    {
       z = sidis.GetVariable("z");
       if (z < 0.3 || z > 0.7) continue;
       Q2 = sidis.GetVariable("Q2");
@@ -271,46 +362,114 @@ int MakeKinematicCoveragePlots(const double Ebeam, const char * hadron, const ch
       if (W < 2.3) continue;
       Wp = sidis.GetVariable("Wp");
       if (Wp < 1.6) continue;
+
+      lp = sidis.GetLorentzVector("lp");//scattered lepton 4-momentum
+      Ph = sidis.GetLorentzVector("Ph");//outgoing hadron 4-momentum
+
       x = sidis.GetVariable("x");
       Pt = sidis.GetVariable("Pt");
-      lp = sidis.GetLorentzVector("lp");
-      Ph = sidis.GetLorentzVector("Ph");
-      acc_FA = GetAcceptance_e(lp, "FA") * GetAcceptance_hadron(Ph, hadron);
-      acc_LA = GetAcceptance_e(lp, "LA") * GetAcceptance_hadron(Ph, hadron);
-      if (acc_FA > 0){
-	xQ2_FA->Fill(x, Q2, acc_FA);
-	xW_FA->Fill(x, W, acc_FA);
-	xz_FA->Fill(x, z, acc_FA);
-	xPt_FA->Fill(x, Pt, acc_FA);
-	xWp_FA->Fill(x, Wp, acc_FA);
-	zPt_FA->Fill(z, Pt, acc_FA);
-	zQ2_FA->Fill(z, Q2, acc_FA);
-	zW_FA->Fill(z, W, acc_FA);
-	zWp_FA->Fill(z, Wp, acc_FA);
-	PtQ2_FA->Fill(Pt, Q2, acc_FA);
-	PtW_FA->Fill(Pt, W, acc_FA);
-	PtWp_FA->Fill(Pt, Wp, acc_FA);
-	WQ2_FA->Fill(W, Q2, acc_FA);
-	WpQ2_FA->Fill(Wp, Q2, acc_FA);
+           
+
+      //cuts
+      TVector3 z_axis(0,0,1);
+      float theta_l = lp.Angle(z_axis);
+      float theta_h = Ph.Angle(z_axis);
+
+      //my calculation of pT (from LOI)
+      Pt_my = Ph.P() * sin(theta_h - theta_l);
+
+      //cuts QA histograms
+      //electron
+      lepton_P->Fill(lp.P(), weight);
+      lepton_phi->Fill(lp.Phi(), weight);
+      lepton_eta->Fill(lp.Eta(), weight);
+
+      lepton_theta_1->Fill(theta_l, weight);
+      lepton_theta_2->Fill(2*atan(exp(-lp.Eta())), weight);
+
+      //hadron
+      hadron_P->Fill(Ph.P(), weight);
+      hadron_phi->Fill(Ph.Phi(), weight);
+      hadron_eta->Fill(Ph.Eta(), weight);
+      
+      hadron_theta_1->Fill(theta_h, weight);
+      hadron_theta_2->Fill(2*atan(exp(-Ph.Eta())), weight);
+     
+
+      //electron
+      //cuts from LOI: theta = (10.3 - 12.4) deg, phi = (-2.28 - 2.28) deg, P = (4.0 - 5.4) GeV
+      if( lp.P() < 4.0 || lp.P() > 5.4 ) continue;
+      //cuts from above converted to rad
+      if( lp.Phi() < -0.03979 || lp.Phi() > 0.03979 ) continue;
+      if( theta_l < 0.178 || theta_l > 0.2164208 ) continue; //theta calculated from pseudorapidity
+
+      //hadron
+      //cuts from LOI: theta = (5.0 - 15.0) deg, phi = (167 - 197) deg (this is +-13 deg around pi, i.e. directly back from electron), P = (2.0 - 4.0) GeV
+      if( Ph.P() < 2.0 || Ph.P() > 4.0 ) continue;
+      //cuts from above converted to rad
+      if( Ph.Phi() < 2.9147 && Ph.Phi() > -2.9147 ) continue; //this is around pi (or -pi), i.e. in "backward" region
+      if( theta_h < 0.0872665 || theta_h > 0.261799 ) continue; //theta calculated from pseudorapidity
+
+      //-----------------------------------------
+
+      //acc_FA = GetAcceptance_e(lp, "FA") * GetAcceptance_hadron(Ph, hadron);
+      acc_FA = 1.; //turn off SoLID acceptance x efficiency weights
+
+      //acc_LA = GetAcceptance_e(lp, "LA") * GetAcceptance_hadron(Ph, hadron);
+      acc_LA = 1.; //turn off SoLID acceptance x efficiency weights
+
+      if (acc_FA > 0)
+      {
+        //kinematic histograms
+	      xQ2_FA->Fill(x, Q2, acc_FA*weight);
+	      xW_FA->Fill(x, W, acc_FA*weight);
+      	xz_FA->Fill(x, z, acc_FA*weight);
+      	xPt_FA->Fill(x, Pt, acc_FA*weight);
+      	xWp_FA->Fill(x, Wp, acc_FA*weight);
+      	zPt_FA->Fill(z, Pt, acc_FA*weight);
+      	zQ2_FA->Fill(z, Q2, acc_FA*weight);
+      	zW_FA->Fill(z, W, acc_FA*weight);
+      	zWp_FA->Fill(z, Wp, acc_FA*weight);
+      	PtQ2_FA->Fill(Pt, Q2, acc_FA*weight);
+      	PtW_FA->Fill(Pt, W, acc_FA*weight);
+      	PtWp_FA->Fill(Pt, Wp, acc_FA*weight);
+      	WQ2_FA->Fill(W, Q2, acc_FA*weight);
+      	WpQ2_FA->Fill(Wp, Q2, acc_FA*weight);
+
+
+        //F_U(LL),T histograms
+        F_UUT_hist->Fill(Pt, sidis.FUUT()*acc_FA);
+        F_UUT_weight_hist->Fill(Pt, sidis.FUUT()*acc_FA*weight);
+        //F_UUT_weight_hist->Fill(Pt, acc_FA*weight); //weight already contains FUUT()
+
+        P_T_hist->Fill(Pt, acc_FA);
+        P_T_weight_hist->Fill(Pt, acc_FA*weight);
+        //P_T_weight_hist->Fill(Pt, acc_FA*weight/sidis.FUUT()); //get rid of FUUT in this distribution - for scaling of F_UUT_weight_hist
+
+          
       }
+/*
       if (acc_LA > 0){
-	xQ2_LA->Fill(x, Q2, acc_LA);
-	xW_LA->Fill(x, W, acc_LA);
-	xz_LA->Fill(x, z, acc_LA);
-	xPt_LA->Fill(x, Pt, acc_LA);
-	xWp_LA->Fill(x, Wp, acc_LA);
-	zPt_LA->Fill(z, Pt, acc_LA);
-	zQ2_LA->Fill(z, Q2, acc_LA);
-	zW_LA->Fill(z, W, acc_LA);
-	zWp_LA->Fill(z, Wp, acc_LA);
-	PtQ2_LA->Fill(Pt, Q2, acc_LA);
-	PtW_LA->Fill(Pt, W, acc_LA);
-	PtWp_LA->Fill(Pt, Wp, acc_LA);
-	WQ2_LA->Fill(W, Q2, acc_LA);
-	WpQ2_LA->Fill(Wp, Q2, acc_LA);
+      	xQ2_LA->Fill(x, Q2, acc_LA);
+      	xW_LA->Fill(x, W, acc_LA);
+      	xz_LA->Fill(x, z, acc_LA);
+      	xPt_LA->Fill(x, Pt, acc_LA);
+        xWp_LA->Fill(x, Wp, acc_LA);
+      	zPt_LA->Fill(z, Pt, acc_LA);
+      	zQ2_LA->Fill(z, Q2, acc_LA);
+      	zW_LA->Fill(z, W, acc_LA);
+       	zWp_LA->Fill(z, Wp, acc_LA);
+        PtQ2_LA->Fill(Pt, Q2, acc_LA);
+        PtW_LA->Fill(Pt, W, acc_LA);
+        PtWp_LA->Fill(Pt, Wp, acc_LA);
+        WQ2_LA->Fill(W, Q2, acc_LA);
+        WpQ2_LA->Fill(Wp, Q2, acc_LA);
       }
+*/
     }
   }
+
+/*
   xQ2_FA->Divide(xQ2_FA); xQ2_FA->Scale(100);
   xQ2_LA->Divide(xQ2_LA); xQ2_LA->Scale(100);
   xW_FA->Divide(xW_FA); xW_FA->Scale(100);
@@ -339,6 +498,7 @@ int MakeKinematicCoveragePlots(const double Ebeam, const char * hadron, const ch
   PtWp_LA->Divide(PtWp_LA); PtWp_LA->Scale(100);
   WpQ2_FA->Divide(WpQ2_FA); WpQ2_FA->Scale(100);
   WpQ2_LA->Divide(WpQ2_LA); WpQ2_LA->Scale(100);
+*/
   fs->Write();
   return 0;
 }
@@ -622,7 +782,7 @@ int AnalyzeEstatUT3(const char * readfile, const char * savefile, const double E
   TLorentzVector lp(0, 0, 0, 0);
   TLorentzVector Ph(0, 0, 0, 0);
   Lsidis sidis_p;
-  sidis_p.SetNucleus(0.844, 0);
+  sidis_p.SetNucleus(1, 0);
   sidis_p.SetHadron(had);
   if (strcmp(had, "pi+") == 0 || strcmp(had, "pi-") == 0) sidis_p.ChangeTMDpars(0.604, 0.114);
   if (strcmp(had, "K+") == 0 || strcmp(had, "K-") == 0) sidis_p.ChangeTMDpars(0.604, 0.131);
@@ -668,7 +828,7 @@ int AnalyzeEstatUT3(const char * readfile, const char * savefile, const double E
 	  hs->Fill(sidis.GetVariable("phih"), std::abs(sidis.GetVariable("phiS")), weight * acc);
 	}
       }
-      if (Nrec > 100000) break;
+      if (Nrec > 500000) break;
     }
     hvar->Scale(lumi * time * eff / Nsim);
     hs->Scale(lumi * time * eff / Nsim);
@@ -713,8 +873,11 @@ int AnalyzeEstatUT3(const char * readfile, const char * savefile, const double E
   infile.close();
   return 0;
 }
+
   
 double CheckCurrentCut(const double Ebeam, const char * hadron, const double kT2 = 0.5, const double MiT2 = 0.5, const double MfT2 = 0.5, const char * plotname = 0){
+
+/*
   Lsidis sidis;
   TLorentzVector l(0, 0, Ebeam, Ebeam);
   TLorentzVector P(0, 0, 0, 0.938272);
@@ -792,7 +955,10 @@ double CheckCurrentCut(const double Ebeam, const char * hadron, const double kT2
   h0->Delete();
   hall->Delete();
   hcut->Delete();
+*/
+  double rate = 0;
   return rate;
+
 }
 
 int CreateFileSivers(const char * rootfile1, const char * rootfile2, const char * csvfile){//Create file for Sivers analysis use

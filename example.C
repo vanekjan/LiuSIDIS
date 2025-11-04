@@ -1,4 +1,4 @@
-#include "Lsidis.h"
+#include "Header/Lsidis3.h"
 
 using namespace std;
 
@@ -13,6 +13,7 @@ int main(int argc, char * argv[]){
   mysidis.SetHadron("pi+");//set detected hadron: pi+, pi-, pi0, K+, K-, K0, p
   mysidis.SetPDFset("CJ15lo");//choose a PDF set
   mysidis.SetFFset("DSSFFlo");//choose an FF set
+//  mysidis.SetFFset("JAM19FF_pion_nlo");
   
   TLorentzVector lp, Ph;//scattered electron and detected hadron
   double weight;//weight of event
