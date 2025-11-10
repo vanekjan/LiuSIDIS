@@ -320,16 +320,36 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
   //basic kinematic plots
   
   TH1D *lepton_P = new TH1D("lepton_P", "lepton_P", 100, 0, 10);
+  TH1D *lepton_P_cuts = new TH1D("lepton_P_cuts", "lepton_P_cuts", 100, 0, 10);
+
   TH1D *lepton_phi = new TH1D("lepton_phi", "lepton_phi", 360, -TMath::Pi(), TMath::Pi());
+  TH1D *lepton_phi_cuts = new TH1D("lepton_phi_cuts", "lepton_phi_cuts", 360, -TMath::Pi(), TMath::Pi());
+
   TH1D *lepton_theta_1 = new TH1D("lepton_theta_1", "lepton_theta_1", 360, -TMath::Pi(), TMath::Pi());
+  TH1D *lepton_theta_1_cuts = new TH1D("lepton_theta_1_cuts", "lepton_theta_1_cuts", 360, -TMath::Pi(), TMath::Pi());
+
   TH1D *lepton_theta_2 = new TH1D("lepton_theta_2", "lepton_theta_2", 360, -TMath::Pi(), TMath::Pi());
+  TH1D *lepton_theta_2_cuts = new TH1D("lepton_theta_2_cuts", "lepton_theta_2_cuts", 360, -TMath::Pi(), TMath::Pi());
+
   TH1D *lepton_eta = new TH1D("lepton_eta", "lepton_eta", 100, -5, 5);
+  TH1D *lepton_eta_cuts = new TH1D("lepton_eta_cuts", "lepton_eta_cuts", 100, -5, 5);
+
+  //---------------------------------------
 
   TH1D *hadron_P = new TH1D("hadron_P", "hadron_P", 100, 0, 10);
+  TH1D *hadron_P_cuts = new TH1D("hadron_P_cuts", "hadron_P_cuts", 100, 0, 10);
+
   TH1D *hadron_phi = new TH1D("hadron_phi", "hadron_phi", 360, -TMath::Pi(), TMath::Pi());
+  TH1D *hadron_phi_cuts = new TH1D("hadron_phi_cuts", "hadron_phi_cuts", 360, -TMath::Pi(), TMath::Pi());
+
   TH1D *hadron_theta_1 = new TH1D("hadron_theta_1", "hadron_theta_1", 360, -TMath::Pi(), TMath::Pi());
+  TH1D *hadron_theta_1_cuts = new TH1D("hadron_theta_1_cuts", "hadron_theta_1_cuts", 360, -TMath::Pi(), TMath::Pi());
+
   TH1D *hadron_theta_2 = new TH1D("hadron_theta_2", "hadron_theta_2", 360, -TMath::Pi(), TMath::Pi());
+  TH1D *hadron_theta_2_cuts = new TH1D("hadron_theta_2_cuts", "hadron_theta_2_cuts", 360, -TMath::Pi(), TMath::Pi());
+
   TH1D *hadron_eta = new TH1D("hadron_eta", "hadron_eta", 100, -5, 5);
+  TH1D *hadron_eta_cuts = new TH1D("hadron_eta_cuts", "hadron_eta_cuts", 100, -5, 5);
   
   //---------------------------------------------------------------------------
 
@@ -345,7 +365,7 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
 
   double x, Q2, z, z_my, Pt, Pt_my, W, Wp;
   double weight, acc_FA, acc_LA;
-  TLorentzVector lp, Ph;
+  TLorentzVector l_beam, lp, Ph;
 
   for (Long64_t i = 0; i < nEvents; i++)
   {
@@ -363,8 +383,14 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       Wp = sidis.GetVariable("Wp");
       if (Wp < 1.6) continue;
 
+      
+      l_beam = sidis.GetLorentzVector("l");//beam lepton 4-momentum
       lp = sidis.GetLorentzVector("lp");//scattered lepton 4-momentum
       Ph = sidis.GetLorentzVector("Ph");//outgoing hadron 4-momentum
+
+      TLorentzVector q_4mom = l_beam - lp;
+
+
 
       x = sidis.GetVariable("x");
       Pt = sidis.GetVariable("Pt");
@@ -375,8 +401,8 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       float theta_l = lp.Angle(z_axis);
       float theta_h = Ph.Angle(z_axis);
 
-      //my calculation of pT (from LOI)
-      Pt_my = Ph.P() * sin(theta_h - theta_l);
+      //my calculation of pT (from LOI - from event cartoon)
+      Pt_my = Ph.P() * sin(Ph.Angle(q_4mom.Vect()));
 
       //cuts QA histograms
       //electron
@@ -385,7 +411,8 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       lepton_eta->Fill(lp.Eta(), weight);
 
       lepton_theta_1->Fill(theta_l, weight);
-      lepton_theta_2->Fill(2*atan(exp(-lp.Eta())), weight);
+      lepton_theta_2->Fill(lp.Theta(), weight);
+      //lepton_theta_2->Fill(2*atan(exp(-lp.Eta())), weight);
 
       //hadron
       hadron_P->Fill(Ph.P(), weight);
@@ -393,7 +420,11 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       hadron_eta->Fill(Ph.Eta(), weight);
       
       hadron_theta_1->Fill(theta_h, weight);
-      hadron_theta_2->Fill(2*atan(exp(-Ph.Eta())), weight);
+      hadron_theta_2->Fill(Ph.Theta(), weight);
+      //hadron_theta_2->Fill(2*atan(exp(-Ph.Eta())), weight);
+      
+
+      //-----------------------------------------
      
 
       //electron
@@ -408,9 +439,30 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       if( Ph.P() < 2.0 || Ph.P() > 4.0 ) continue;
       //cuts from above converted to rad
       if( Ph.Phi() < 2.9147 && Ph.Phi() > -2.9147 ) continue; //this is around pi (or -pi), i.e. in "backward" region
+      //if( Ph.Phi() < -0.226893 || Ph.Phi() > 0.226893 ) continue; //test - select protons around 0
       if( theta_h < 0.0872665 || theta_h > 0.261799 ) continue; //theta calculated from pseudorapidity
 
       //-----------------------------------------
+      //
+      //cuts QA histograms
+      //electron
+      lepton_P_cuts->Fill(lp.P(), weight);
+      lepton_phi_cuts->Fill(lp.Phi(), weight);
+      lepton_eta_cuts->Fill(lp.Eta(), weight);
+ 
+      lepton_theta_1_cuts->Fill(theta_l, weight);
+      lepton_theta_2_cuts->Fill(lp.Theta(), weight);
+      //lepton_theta_2_cuts->Fill(2*atan(exp(-lp.Eta())), weight);
+ 
+      //hadron
+      hadron_P_cuts->Fill(Ph.P(), weight);
+      hadron_phi_cuts->Fill(Ph.Phi(), weight);
+      hadron_eta_cuts->Fill(Ph.Eta(), weight);
+ 
+      hadron_theta_1_cuts->Fill(theta_h, weight);
+      hadron_theta_2_cuts->Fill(Ph.Theta(), weight);
+      //hadron_theta_2_cuts->Fill(2*atan(exp(-Ph.Eta())), weight);
+
 
       //acc_FA = GetAcceptance_e(lp, "FA") * GetAcceptance_hadron(Ph, hadron);
       acc_FA = 1.; //turn off SoLID acceptance x efficiency weights

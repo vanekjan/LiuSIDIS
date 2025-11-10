@@ -490,8 +490,12 @@ int Lsidis::CalculateFinalState(){//Calculate scattered electron and detected ha
     }
     TLorentzVector PPh_0;
     TLorentzVector Plp_0 = Plp_1;
+    //std::cout<<"lepton phi in lepton frame before = "<<Plp_0.Phi()<<std::endl;
+    //std::cout<<"lepton theta in lepton frame before = "<<Plp_0.Theta()<<std::endl;
     Plp_0.RotateZ(-Pq_1.Phi());
     Plp_0.RotateY(-Pq_1.Theta());
+    //std::cout<<"lepton phi in lepton frame = "<<Plp_0.Phi()<<std::endl;
+    //std::cout<<"lepton theta in lepton frame = "<<Plp_0.Theta()<<std::endl;
     PPh_0.SetXYZT(Pt * cos(phih + Plp_0.Phi()), Pt * sin(phih + Plp_0.Phi()), sqrt(pow(z * Pq_1.E(), 2) - Mh * Mh - Pt * Pt), z * Pq_1.E());
     TLorentzVector PPh_1 = PPh_0;
     PPh_1.RotateY(Pq_1.Theta());

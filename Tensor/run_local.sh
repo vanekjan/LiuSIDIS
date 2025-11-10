@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./analysis_deuteron 100000 2
+./analysis_deuteron 10 2
