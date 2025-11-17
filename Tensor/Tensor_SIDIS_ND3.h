@@ -17,21 +17,21 @@
 using namespace std;
 
 //set numbers of protons and neutrons of target nucleus
-/*
+
 //from SoLID sidis 2020
-const double Np = 0.844 / 3.0 * 10.0 + 0.69 / 2.0 + 0.47 / 2.0;
+//const double Np = 0.844 / 3.0 * 10.0 + 0.69 / 2.0 + 0.47 / 2.0;
 
 //const double Nn = 0.844 / 3.0 * 7.0 + 0.69 / 2.0 + 0.47 / 2.0; //for NH3
-const double Nn = 0.844 / 3.0 * 10.0 + 0.69 / 2.0 + 0.47 / 2.0; //for ND3
+//const double Nn = 0.844 / 3.0 * 10.0 + 0.69 / 2.0 + 0.47 / 2.0; //for ND3
 
 //---------------------------
 
 //from base SoLID folder
-const double Np = 0.334*10.0+0.593*2.0;
+//const double Np = 0.334*10.0+0.593*2.0;
 
 //const double Nn = 0.334*7.0+0.593*2.0; //for NH3
-const double Nn = 0.334*10.0+0.593*2.0;   //for ND3
-*/
+//const double Nn = 0.334*10.0+0.593*2.0;   //for ND3
+
 //---------------------------
 //pure deuteron, deal with dilution later
 
@@ -165,12 +165,18 @@ int GetTotalRate(const double Ebeam, const char * hadron){//Estimate the total r
 
 int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char * hadron, const char * savefile)
 {
+
+  float lumi = 1.0e+9 * pow(0.197327, 2);
+  float scale_lumi = lumi/nEvents;
+
+  //--------------------------------------
+
   Lsidis sidis;
 
   TLorentzVector l(0, 0, Ebeam, Ebeam);
-  //TLorentzVector P(0, 0, 0, 0.938272); //proton
+  TLorentzVector P(0, 0, 0, 0.938272); //proton
   //TLorentzVector P(0, 0, 0, 0.939565); //neutron
-  TLorentzVector P(0, 0, 0, 1.875612945); //deuteron
+  //TLorentzVector P(0, 0, 0, 1.875612945); //deuteron
 
   sidis.SetNucleus(Np,Nn);
   sidis.SetHadron(hadron);
@@ -362,6 +368,12 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
   TH1D *P_T_weight_hist = new TH1D("P_T_weight_hist", "P_T_weight_hist", 11, -0.1, 1);
 
   //---------------------------------------------------------------------------
+  
+  TH1D *nEvents_hist = new TH1D("nEvents_hist", "nEvents_hist", 1, -0.5, 0.5);
+
+  nEvents_hist->Fill(nEvents);
+
+  //--------------------------------------------------------------------------
 
   double x, Q2, z, z_my, Pt, Pt_my, W, Wp;
   double weight, acc_FA, acc_LA;
@@ -390,12 +402,9 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
 
       TLorentzVector q_4mom = l_beam - lp;
 
-
-
       x = sidis.GetVariable("x");
       Pt = sidis.GetVariable("Pt");
            
-
       //cuts
       TVector3 z_axis(0,0,1);
       float theta_l = lp.Angle(z_axis);
@@ -439,7 +448,7 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       if( Ph.P() < 2.0 || Ph.P() > 4.0 ) continue;
       //cuts from above converted to rad
       if( Ph.Phi() < 2.9147 && Ph.Phi() > -2.9147 ) continue; //this is around pi (or -pi), i.e. in "backward" region
-      //if( Ph.Phi() < -0.226893 || Ph.Phi() > 0.226893 ) continue; //test - select protons around 0
+      //if( Ph.Phi() < 1.5 && Ph.Phi() > -1.5 ) continue; //test - more open cut
       if( theta_h < 0.0872665 || theta_h > 0.261799 ) continue; //theta calculated from pseudorapidity
 
       //-----------------------------------------
@@ -500,57 +509,31 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
 
           
       }
-/*
-      if (acc_LA > 0){
-      	xQ2_LA->Fill(x, Q2, acc_LA);
-      	xW_LA->Fill(x, W, acc_LA);
-      	xz_LA->Fill(x, z, acc_LA);
-      	xPt_LA->Fill(x, Pt, acc_LA);
-        xWp_LA->Fill(x, Wp, acc_LA);
-      	zPt_LA->Fill(z, Pt, acc_LA);
-      	zQ2_LA->Fill(z, Q2, acc_LA);
-      	zW_LA->Fill(z, W, acc_LA);
-       	zWp_LA->Fill(z, Wp, acc_LA);
-        PtQ2_LA->Fill(Pt, Q2, acc_LA);
-        PtW_LA->Fill(Pt, W, acc_LA);
-        PtWp_LA->Fill(Pt, Wp, acc_LA);
-        WQ2_LA->Fill(W, Q2, acc_LA);
-        WpQ2_LA->Fill(Wp, Q2, acc_LA);
-      }
-*/
+
+
+
     }
   }
 
 /*
-  xQ2_FA->Divide(xQ2_FA); xQ2_FA->Scale(100);
-  xQ2_LA->Divide(xQ2_LA); xQ2_LA->Scale(100);
-  xW_FA->Divide(xW_FA); xW_FA->Scale(100);
-  xW_LA->Divide(xW_LA); xW_LA->Scale(100);
-  xz_FA->Divide(xz_FA); xz_FA->Scale(100);
-  xz_LA->Divide(xz_LA); xz_LA->Scale(100);
-  xPt_FA->Divide(xPt_FA); xPt_FA->Scale(100);
-  xPt_LA->Divide(xPt_LA); xPt_LA->Scale(100);
-  xWp_FA->Divide(xWp_FA); xWp_FA->Scale(100);
-  xWp_LA->Divide(xWp_LA); xWp_LA->Scale(100);
-  zW_FA->Divide(zW_FA); zW_FA->Scale(100);
-  zW_LA->Divide(zW_LA); zW_LA->Scale(100);
-  zQ2_FA->Divide(zQ2_FA); zQ2_FA->Scale(100);
-  zQ2_LA->Divide(zQ2_LA); zQ2_LA->Scale(100);
-  zWp_FA->Divide(zWp_FA); zWp_FA->Scale(100);
-  zWp_LA->Divide(zWp_LA); zWp_LA->Scale(100);
-  zPt_FA->Divide(zPt_FA); zPt_FA->Scale(100);
-  zPt_LA->Divide(zPt_LA); zPt_LA->Scale(100);
-  PtQ2_FA->Divide(PtQ2_FA); PtQ2_FA->Scale(100);
-  PtQ2_LA->Divide(PtQ2_LA); PtQ2_LA->Scale(100);
-  WQ2_FA->Divide(WQ2_FA); WQ2_FA->Scale(100);
-  WQ2_LA->Divide(WQ2_LA); WQ2_LA->Scale(100);
-  PtW_FA->Divide(PtW_FA); PtW_FA->Scale(100);
-  PtW_LA->Divide(PtW_LA); PtW_LA->Scale(100);
-  PtWp_FA->Divide(PtWp_FA); PtWp_FA->Scale(100);
-  PtWp_LA->Divide(PtWp_LA); PtWp_LA->Scale(100);
-  WpQ2_FA->Divide(WpQ2_FA); WpQ2_FA->Scale(100);
-  WpQ2_LA->Divide(WpQ2_LA); WpQ2_LA->Scale(100);
+  //luminosity scaling moved to local macro
+  //done to allow easier merging of multiple jobs
+  xQ2_FA->Scale(scale_lumi);
+  xW_FA->Scale(scale_lumi); 
+  xz_FA->Scale(scale_lumi);
+  xPt_FA->Scale(scale_lumi);;
+  xWp_FA->Scale(scale_lumi);
+  zW_FA->Scale(scale_lumi);
+  zQ2_FA->Scale(scale_lumi);
+  zPt_FA->Scale(scale_lumi);
+  PtQ2_FA->Scale(scale_lumi);
+  WQ2_FA->Scale(scale_lumi);
+  PtW_FA->Scale(scale_lumi);
+  PtWp_FA->Scale(scale_lumi);
+  WQ2_FA->Scale(scale_lumi);
+  WpQ2_FA->Scale(scale_lumi);
 */
+
   fs->Write();
   return 0;
 }
