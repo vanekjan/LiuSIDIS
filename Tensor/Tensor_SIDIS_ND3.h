@@ -371,7 +371,7 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
   
   TH1D *nEvents_hist = new TH1D("nEvents_hist", "nEvents_hist", 1, -0.5, 0.5);
 
-  nEvents_hist->Fill(nEvents);
+  nEvents_hist->Fill(0, nEvents);
 
   //--------------------------------------------------------------------------
 

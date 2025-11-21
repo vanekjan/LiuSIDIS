@@ -9,5 +9,5 @@
 #SBATCH --output=/w/hallc-scshelf2102/tensor/vanekjan/LiuSIDIS/Tensor/output/jobs/%x-%j-%Ni_%a.out
 #SBATCH --error=/w/hallc-scshelf2102/tensor/vanekjan/LiuSIDIS/Tensor/output/jobs/%x-%j-%N_%a.err
 
-./analysis_deuteron 800000000 ${SLURM_ARRAY_TASK_ID} 
+./analysis_deuteron 800000000 0 
  
