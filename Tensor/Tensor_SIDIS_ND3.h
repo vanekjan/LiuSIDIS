@@ -174,9 +174,9 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
   Lsidis sidis;
 
   TLorentzVector l(0, 0, Ebeam, Ebeam);
-  TLorentzVector P(0, 0, 0, 0.938272); //proton
+  //TLorentzVector P(0, 0, 0, 0.938272); //proton
   //TLorentzVector P(0, 0, 0, 0.939565); //neutron
-  //TLorentzVector P(0, 0, 0, 1.875612945); //deuteron
+  TLorentzVector P(0, 0, 0, 1.875612945); //deuteron
 
   sidis.SetNucleus(Np,Nn);
   sidis.SetHadron(hadron);
@@ -190,8 +190,10 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
   //two possibilities based on selection in GenerateEvent()
   //method == 0 - generate in x, y, z, Pt, phih, phiS
   //method == 1 - generate in x, Q2, z, Pt, phih, phiS - this one is used now
-  double Xmin[6] = {0.05, 1.0, 0.3, 0.0, -M_PI, -M_PI}; //old phiS -M_PI
-  double Xmax[6] = {0.4, 3.0, 0.7, 2.0, M_PI, M_PI}; //old phiS M_PI
+  double Xmin[6] = {0.05, 1.0, 0.3, 0.0, -M_PI, -M_PI}; //my values
+  double Xmax[6] = {0.4, 3.0, 0.7, 2.0, M_PI, M_PI}; //my values
+  //double Xmin[6] = {0.0, 1.0, 0.3, 0.0, -M_PI, -M_PI}; //dafault from SoLID
+  //double Xmax[6] = {0.7, 10.0, 0.7, 2.0, M_PI, M_PI}; //default from SoLID
   sidis.SetRange(Xmin, Xmax);
 
   TFile * fs = new TFile(savefile, "RECREATE");
@@ -200,6 +202,10 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
   TH2D * xQ2_FA = new TH2D("xQ2_FA", "", 700, 0.0, 0.7, 900, 0.0, 9.0);
   xQ2_FA->GetXaxis()->SetTitle("x");
   xQ2_FA->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
+
+  TH2D * xQ2_new_bins = new TH2D("xQ2_new_bins", "", 50, 0.11, 0.26, 50, 1.4, 2.8);
+  xQ2_new_bins->GetXaxis()->SetTitle("x");
+  xQ2_new_bins->GetYaxis()->SetTitle("Q^{2} / GeV^{2}");
 
   //TH2D * xQ2_LA = new TH2D("xQ2_LA", "", 700, 0.0, 0.7, 900, 0.0, 9.0);
   //xQ2_LA->GetXaxis()->SetTitle("x");
@@ -245,6 +251,12 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
   TH2D * zPt_FA = new TH2D("zPt_FA", "", 600, 0.2, 0.8, 800, 0.0, 2.0);
   zPt_FA->GetXaxis()->SetTitle("z");
   zPt_FA->GetYaxis()->SetTitle("P_{T} / GeV");
+
+  //bins are inverted compared to default histogram above
+  TH2D * zPt_new_bins = new TH2D("zPt_new_bins", "", 50, 0., 0.9, 50, 0.30, 0.70);
+  zPt_new_bins->GetXaxis()->SetTitle("P_{T} / GeV");
+  zPt_new_bins->GetYaxis()->SetTitle("z");
+
 
   //TH2D * zPt_LA = new TH2D("zPt_LA", "", 600, 0.2, 0.8, 800, 0.0, 2.0);
   //zPt_LA->GetXaxis()->SetTitle("z");
@@ -364,36 +376,124 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
   TH1D *F_UUT_hist = new TH1D("F_UUT_hist", "F_UUT_hist", 11, -0.1, 1);
   TH1D *F_UUT_weight_hist = new TH1D("F_UUT_weight_hist", "F_UUT_weight_hist", 11, -0.1, 1);
 
+  TH1D *F_ULLT_hist = new TH1D("F_ULLT_hist", "F_ULLT_hist", 11, -0.1, 1);
+
+  TH1D *F_UUT_hist_new_bins = new TH1D("F_UUT_hist_new_bins", "F_UUT_hist_new_bins", 10, 0, 0.7);
+  TH1D *F_UUT_weight_hist_new_bins = new TH1D("F_UUT_weight_hist_new_bins", "F_UUT_weight_hist_new_bins", 10, 0., 0.7);
+  
+  TH1D *F_ULLT_hist_new_bins = new TH1D("F_ULLT_hist_new_bins", "F_ULLT_hist_new_bins", 10, 0, 0.7);
+
+  //----
+
   TH1D *P_T_hist = new TH1D("P_T_hist", "P_T_hist", 11, -0.1, 1);
+  TH1D *P_T_no_cut_hist = new TH1D("P_T_no_cut_hist", "P_T_no_cut_hist", 11, -0.1, 1);
+  TH1D *P_T_no_kine_cut_hist = new TH1D("P_T_no_kine_cut_hist", "P_T_no_kine_cut_hist", 11, -0.1, 1);
+
   TH1D *P_T_weight_hist = new TH1D("P_T_weight_hist", "P_T_weight_hist", 11, -0.1, 1);
+  TH1D *P_T_weight_no_cut_hist = new TH1D("P_T_weight_no_cut_hist", "P_T_weight_no_cut_hist", 11, -0.1, 1);
+  TH1D *P_T_weight_no_kine_cut_hist = new TH1D("P_T_weight_no_kine_cut_hist", "P_T_weight_no_kine_cut_hist", 11, -0.1, 1);
+
+
+  TH1D *P_T_hist_new_bins = new TH1D("P_T_hist_new_bins", "P_T_hist_new_bins", 10, 0.0, 0.7);
+  TH1D *P_T_no_cut_hist_new_bins = new TH1D("P_T_no_cut_hist_new_bins", "P_T_no_cut_hist_new_bins", 10, 0.0, 0.7);
+  TH1D *P_T_no_kine_cut_hist_new_bins = new TH1D("P_T_no_kine_cut_hist_new_bins", "P_T_no_kine_cut_hist_new_bins", 10, 0.0, 0.7);
+
+  TH1D *P_T_weight_hist_new_bins = new TH1D("P_T_weight_hist_new_bins", "P_T_weight_hist_new_bins", 10, 0.0, 0.7);
+  TH1D *P_T_weight_no_cut_hist_new_bins = new TH1D("P_T_weight_no_cut_hist_new_bins", "P_T_weight_no_cut_hist_new_bins", 10, 0.0, 0.7);
+  TH1D *P_T_weight_no_kine_cut_hist_new_bins = new TH1D("P_T_weight_no_kine_cut_hist_new_bins", "P_T_weight_no_kine_cut_hist_new_bins", 10, 0.0, 0.7);
 
   //---------------------------------------------------------------------------
   
   TH1D *nEvents_hist = new TH1D("nEvents_hist", "nEvents_hist", 1, -0.5, 0.5);
 
-  nEvents_hist->Fill(0, nEvents);
+  nEvents_hist->SetBinContent(1, nEvents);
+  nEvents_hist->SetBinError(1, sqrt(nEvents));
 
+  TH1D *nEvents_event_cuts_hist = new TH1D("nEvents_event_cuts_hist", "nEvents_event_cuts_hist", 1, -0.5, 0.5);
+
+  TH1D *nEvents_all_cuts_hist = new TH1D("nEvents_all_cuts_hist", "nEvents_all_cuts_hist", 1, -0.5, 0.5);
   //--------------------------------------------------------------------------
 
   double x, Q2, z, z_my, Pt, Pt_my, W, Wp;
   double weight, acc_FA, acc_LA;
   TLorentzVector l_beam, lp, Ph;
 
+  //-----------
+          
+  float Delta_x = 0.35 - 0.1;
+  float Delta_Q2 = 2.5 - 1.0;
+  float Delta_z = 0.7 - 0.3;
+  float Delta_phi = 2*M_PI;
+  float Delta_phi_s = 2*M_PI;
+  float Delta_Pt = 2.0; //for Pt integrated distributions, need separate value for binned histograms in Pt
+
+  float vol_event = Delta_x*Delta_Q2*Delta_z*Delta_phi*Delta_phi_s*Delta_Pt;
+
+  //----
+
+  float Delta_Pt_bin = P_T_no_kine_cut_hist->GetBinWidth(1);
+  float Delta_Pt_bin_new = P_T_no_kine_cut_hist_new_bins->GetBinWidth(1);
+
+  float vol_event_Pt_bin = Delta_x*Delta_Q2*Delta_z*Delta_phi*Delta_phi_s*Delta_Pt_bin;
+  float vol_event_Pt_bin_new = Delta_x*Delta_Q2*Delta_z*Delta_phi*Delta_phi_s*Delta_Pt_bin_new;
+
+  //----
+  
+  float Delta_phi_cut = 2*(M_PI-2.9147);
+
+  float vol_event_cut = Delta_x*Delta_Q2*Delta_z*Delta_phi_cut*Delta_phi_s*Delta_Pt;
+
+  float vol_event_cut_Pt_bin = Delta_x*Delta_Q2*Delta_z*Delta_phi_cut*Delta_phi_s*Delta_Pt_bin;
+  float vol_event_cut_Pt_bin_new = Delta_x*Delta_Q2*Delta_z*Delta_phi_cut*Delta_phi_s*Delta_Pt_bin_new;
+      
+  //-----------
+
+  
+  int nEvents_event_cuts = 0;
+  int nEvents_all_cuts = 0;
+
   for (Long64_t i = 0; i < nEvents; i++)
   {
     //if (i % 1000000 == 0) std::cout << i*100/nEvents << " %" << std::endl; //original
     if (i % nEvents/10 == 0) std::cout << i*100/nEvents << " %" << std::endl;
-    weight = sidis.GenerateEvent(0, 1);
+    weight = sidis.GenerateEvent(0, 1, 0); //new argument - weight is without volume factor (add later based on specific bins)
     if (weight > 0)
     {
+      //weight = 1.; //for testing
+      
+      P_T_no_cut_hist->Fill(Pt);
+      P_T_no_cut_hist_new_bins->Fill(Pt);
+
+      //these volumes neeed to be changed to the generator level ranges
+      P_T_weight_no_cut_hist->Fill(Pt, weight*vol_event_Pt_bin);
+      P_T_weight_no_cut_hist_new_bins->Fill(Pt, weight*vol_event_Pt_bin_new);
+
       z = sidis.GetVariable("z");
       if (z < 0.3 || z > 0.7) continue;
+
       Q2 = sidis.GetVariable("Q2");
-      if (Q2 < 1.0) continue;
+      if (Q2 < 1.0 || Q2 > 2.5) continue;
+
       W = sidis.GetVariable("W");
       if (W < 2.3) continue;
+
       Wp = sidis.GetVariable("Wp");
       if (Wp < 1.6) continue;
+
+      x = sidis.GetVariable("x");
+      if (x < 0.1 || x > 0.35) continue;
+
+      Pt = sidis.GetVariable("Pt");
+
+      nEvents_event_cuts++;
+
+      //-----------
+
+      P_T_no_kine_cut_hist->Fill(Pt);
+      P_T_no_kine_cut_hist_new_bins->Fill(Pt);
+
+      P_T_weight_no_kine_cut_hist->Fill(Pt, weight*vol_event_Pt_bin);
+      P_T_weight_no_kine_cut_hist_new_bins->Fill(Pt, weight*vol_event_Pt_bin_new);
 
       
       l_beam = sidis.GetLorentzVector("l");//beam lepton 4-momentum
@@ -401,9 +501,6 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       Ph = sidis.GetLorentzVector("Ph");//outgoing hadron 4-momentum
 
       TLorentzVector q_4mom = l_beam - lp;
-
-      x = sidis.GetVariable("x");
-      Pt = sidis.GetVariable("Pt");
            
       //cuts
       TVector3 z_axis(0,0,1);
@@ -415,21 +512,21 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
 
       //cuts QA histograms
       //electron
-      lepton_P->Fill(lp.P(), weight);
-      lepton_phi->Fill(lp.Phi(), weight);
-      lepton_eta->Fill(lp.Eta(), weight);
+      lepton_P->Fill(lp.P(), weight*vol_event);
+      lepton_phi->Fill(lp.Phi(), weight*vol_event);
+      lepton_eta->Fill(lp.Eta(), weight*vol_event);
 
-      lepton_theta_1->Fill(theta_l, weight);
-      lepton_theta_2->Fill(lp.Theta(), weight);
+      lepton_theta_1->Fill(theta_l, weight*vol_event);
+      lepton_theta_2->Fill(lp.Theta(), weight*vol_event);
       //lepton_theta_2->Fill(2*atan(exp(-lp.Eta())), weight);
 
       //hadron
-      hadron_P->Fill(Ph.P(), weight);
-      hadron_phi->Fill(Ph.Phi(), weight);
-      hadron_eta->Fill(Ph.Eta(), weight);
+      hadron_P->Fill(Ph.P(), weight*vol_event);
+      hadron_phi->Fill(Ph.Phi(), weight*vol_event);
+      hadron_eta->Fill(Ph.Eta(), weight*vol_event);
       
-      hadron_theta_1->Fill(theta_h, weight);
-      hadron_theta_2->Fill(Ph.Theta(), weight);
+      hadron_theta_1->Fill(theta_h, weight*vol_event);
+      hadron_theta_2->Fill(Ph.Theta(), weight*vol_event);
       //hadron_theta_2->Fill(2*atan(exp(-Ph.Eta())), weight);
       
 
@@ -447,29 +544,31 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       //cuts from LOI: theta = (5.0 - 15.0) deg, phi = (167 - 197) deg (this is +-13 deg around pi, i.e. directly back from electron), P = (2.0 - 4.0) GeV
       if( Ph.P() < 2.0 || Ph.P() > 4.0 ) continue;
       //cuts from above converted to rad
-      if( Ph.Phi() < 2.9147 && Ph.Phi() > -2.9147 ) continue; //this is around pi (or -pi), i.e. in "backward" region
-      //if( Ph.Phi() < 1.5 && Ph.Phi() > -1.5 ) continue; //test - more open cut
-      if( theta_h < 0.0872665 || theta_h > 0.261799 ) continue; //theta calculated from pseudorapidity
+      if( Ph.Phi() < 2.9147 && Ph.Phi() > -2.9147 ) continue; //this is around pi (or -pi), i.e. in "backward" region 
+      //if( Ph.Phi() < 2.9147 ) continue; //this is around pi (or -pi), i.e. in "backward" region 
+      if( theta_h < 2.*0.0872665 || theta_h > 4.*0.0872665 ) continue; //theta = (10.0 - 20.0) deg
+
+      nEvents_all_cuts++;
 
       //-----------------------------------------
       //
       //cuts QA histograms
       //electron
-      lepton_P_cuts->Fill(lp.P(), weight);
-      lepton_phi_cuts->Fill(lp.Phi(), weight);
-      lepton_eta_cuts->Fill(lp.Eta(), weight);
+      lepton_P_cuts->Fill(lp.P(), weight*vol_event_cut);
+      lepton_phi_cuts->Fill(lp.Phi(), weight*vol_event_cut);
+      lepton_eta_cuts->Fill(lp.Eta(), weight*vol_event_cut);
  
-      lepton_theta_1_cuts->Fill(theta_l, weight);
-      lepton_theta_2_cuts->Fill(lp.Theta(), weight);
+      lepton_theta_1_cuts->Fill(theta_l, weight*vol_event_cut);
+      lepton_theta_2_cuts->Fill(lp.Theta(), weight*vol_event_cut);
       //lepton_theta_2_cuts->Fill(2*atan(exp(-lp.Eta())), weight);
  
       //hadron
-      hadron_P_cuts->Fill(Ph.P(), weight);
-      hadron_phi_cuts->Fill(Ph.Phi(), weight);
-      hadron_eta_cuts->Fill(Ph.Eta(), weight);
+      hadron_P_cuts->Fill(Ph.P(), weight*vol_event_cut);
+      hadron_phi_cuts->Fill(Ph.Phi(), weight*vol_event_cut);
+      hadron_eta_cuts->Fill(Ph.Eta(), weight*vol_event_cut);
  
-      hadron_theta_1_cuts->Fill(theta_h, weight);
-      hadron_theta_2_cuts->Fill(Ph.Theta(), weight);
+      hadron_theta_1_cuts->Fill(theta_h, weight*vol_event_cut);
+      hadron_theta_2_cuts->Fill(Ph.Theta(), weight*vol_event_cut);
       //hadron_theta_2_cuts->Fill(2*atan(exp(-Ph.Eta())), weight);
 
 
@@ -482,30 +581,43 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       if (acc_FA > 0)
       {
         //kinematic histograms
-	      xQ2_FA->Fill(x, Q2, acc_FA*weight);
-	      xW_FA->Fill(x, W, acc_FA*weight);
-      	xz_FA->Fill(x, z, acc_FA*weight);
-      	xPt_FA->Fill(x, Pt, acc_FA*weight);
-      	xWp_FA->Fill(x, Wp, acc_FA*weight);
-      	zPt_FA->Fill(z, Pt, acc_FA*weight);
-      	zQ2_FA->Fill(z, Q2, acc_FA*weight);
-      	zW_FA->Fill(z, W, acc_FA*weight);
-      	zWp_FA->Fill(z, Wp, acc_FA*weight);
-      	PtQ2_FA->Fill(Pt, Q2, acc_FA*weight);
-      	PtW_FA->Fill(Pt, W, acc_FA*weight);
-      	PtWp_FA->Fill(Pt, Wp, acc_FA*weight);
-      	WQ2_FA->Fill(W, Q2, acc_FA*weight);
-      	WpQ2_FA->Fill(Wp, Q2, acc_FA*weight);
+	      xQ2_FA->Fill(x, Q2, acc_FA*weight*vol_event_cut);
+	      xQ2_new_bins->Fill(x, Q2, acc_FA*weight*vol_event_cut);
+	      xW_FA->Fill(x, W, acc_FA*weight*vol_event_cut);
+      	xz_FA->Fill(x, z, acc_FA*weight*vol_event_cut);
+      	xPt_FA->Fill(x, Pt, acc_FA*weight*vol_event_cut);
+      	xWp_FA->Fill(x, Wp, acc_FA*weight*vol_event_cut);
+      	zPt_FA->Fill(z, Pt, acc_FA*weight*vol_event_cut);
+      	zPt_new_bins->Fill(Pt, z, acc_FA*weight*vol_event_cut);//this histogram has inverted axes compared to the default one
+      	zQ2_FA->Fill(z, Q2, acc_FA*weight*vol_event_cut);
+      	zW_FA->Fill(z, W, acc_FA*weight*vol_event_cut);
+      	zWp_FA->Fill(z, Wp, acc_FA*weight*vol_event_cut);
+      	PtQ2_FA->Fill(Pt, Q2, acc_FA*weight*vol_event_cut);
+      	PtW_FA->Fill(Pt, W, acc_FA*weight*vol_event_cut);
+      	PtWp_FA->Fill(Pt, Wp, acc_FA*weight*vol_event_cut);
+      	WQ2_FA->Fill(W, Q2, acc_FA*weight*vol_event_cut);
+      	WpQ2_FA->Fill(Wp, Q2, acc_FA*weight*vol_event_cut);
 
 
         //F_U(LL),T histograms
         F_UUT_hist->Fill(Pt, sidis.FUUT()*acc_FA);
-        F_UUT_weight_hist->Fill(Pt, sidis.FUUT()*acc_FA*weight);
+        F_UUT_weight_hist->Fill(Pt, sidis.FUUT()*acc_FA*weight*vol_event_cut_Pt_bin);
         //F_UUT_weight_hist->Fill(Pt, acc_FA*weight); //weight already contains FUUT()
+        
+        F_ULLT_hist->Fill(Pt, sidis.FUUT()*acc_FA*0.1); //fill F_UUT scaled by 1/10 to estimate F_ULLT
+
+        F_UUT_hist_new_bins->Fill(Pt, sidis.FUUT()*acc_FA);
+        F_UUT_weight_hist_new_bins->Fill(Pt, sidis.FUUT()*acc_FA*weight*vol_event_cut_Pt_bin_new);
+
+        F_ULLT_hist_new_bins->Fill(Pt, sidis.FUUT()*acc_FA*0.1); //fill F_UUT scaled by 1/10 to estimate F_ULLT
+
 
         P_T_hist->Fill(Pt, acc_FA);
-        P_T_weight_hist->Fill(Pt, acc_FA*weight);
+        P_T_weight_hist->Fill(Pt, acc_FA*weight*vol_event_cut_Pt_bin);
         //P_T_weight_hist->Fill(Pt, acc_FA*weight/sidis.FUUT()); //get rid of FUUT in this distribution - for scaling of F_UUT_weight_hist
+        
+        P_T_hist_new_bins->Fill(Pt, acc_FA);
+        P_T_weight_hist_new_bins->Fill(Pt, acc_FA*weight*vol_event_cut_Pt_bin_new);
 
           
       }
@@ -515,24 +627,11 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
     }
   }
 
-/*
-  //luminosity scaling moved to local macro
-  //done to allow easier merging of multiple jobs
-  xQ2_FA->Scale(scale_lumi);
-  xW_FA->Scale(scale_lumi); 
-  xz_FA->Scale(scale_lumi);
-  xPt_FA->Scale(scale_lumi);;
-  xWp_FA->Scale(scale_lumi);
-  zW_FA->Scale(scale_lumi);
-  zQ2_FA->Scale(scale_lumi);
-  zPt_FA->Scale(scale_lumi);
-  PtQ2_FA->Scale(scale_lumi);
-  WQ2_FA->Scale(scale_lumi);
-  PtW_FA->Scale(scale_lumi);
-  PtWp_FA->Scale(scale_lumi);
-  WQ2_FA->Scale(scale_lumi);
-  WpQ2_FA->Scale(scale_lumi);
-*/
+  nEvents_event_cuts_hist->SetBinContent(1, nEvents_event_cuts);
+  nEvents_event_cuts_hist->SetBinError(1, sqrt(nEvents_event_cuts));
+
+  nEvents_all_cuts_hist->SetBinContent(1, nEvents_all_cuts);
+  nEvents_all_cuts_hist->SetBinError(1, sqrt(nEvents_all_cuts));
 
   fs->Write();
   return 0;

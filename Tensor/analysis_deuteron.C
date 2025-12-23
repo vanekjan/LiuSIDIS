@@ -12,8 +12,8 @@ int main(int argc, char * argv[]){
 
   printf("RndSeed = %i \n", RndSeed);
   
-  //gRandom->SetSeed(2);
-  gRandom->SetSeed(RndSeed);
+  gRandom->SetSeed(2);
+  //gRandom->SetSeed(RndSeed);
 
   //set ouptupt file name with variable name based on random seed
   char out_file_pip[40];
