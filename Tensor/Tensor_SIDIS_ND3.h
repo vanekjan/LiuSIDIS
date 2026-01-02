@@ -574,23 +574,23 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
 
         //F_U(LL),T histograms
         F_UUT_hist->Fill(Pt, sidis.FUUT()*acc_FA);
-        F_UUT_weight_hist->Fill(Pt, sidis.FUUT()*acc_FA*weight_Pt_bin);
+        F_UUT_weight_hist->Fill(Pt, sidis.FUUT()*acc_FA*weight);
         //F_UUT_weight_hist->Fill(Pt, acc_FA*weight); //weight already contains FUUT()
         
         F_ULLT_hist->Fill(Pt, sidis.FUUT()*acc_FA*0.1); //fill F_UUT scaled by 1/10 to estimate F_ULLT
 
         F_UUT_hist_new_bins->Fill(Pt, sidis.FUUT()*acc_FA);
-        F_UUT_weight_hist_new_bins->Fill(Pt, sidis.FUUT()*acc_FA*weight_Pt_bin_new);
+        F_UUT_weight_hist_new_bins->Fill(Pt, sidis.FUUT()*acc_FA);
 
         F_ULLT_hist_new_bins->Fill(Pt, sidis.FUUT()*acc_FA*0.1); //fill F_UUT scaled by 1/10 to estimate F_ULLT
 
 
         P_T_hist->Fill(Pt, acc_FA);
-        P_T_weight_hist->Fill(Pt, acc_FA*weight_Pt_bin);
+        P_T_weight_hist->Fill(Pt, acc_FA*weight);
         //P_T_weight_hist->Fill(Pt, acc_FA*weight/sidis.FUUT()); //get rid of FUUT in this distribution - for scaling of F_UUT_weight_hist
         
         P_T_hist_new_bins->Fill(Pt, acc_FA);
-        P_T_weight_hist_new_bins->Fill(Pt, acc_FA*weight_Pt_bin_new);
+        P_T_weight_hist_new_bins->Fill(Pt, acc_FA*weight);
 
           
       }
