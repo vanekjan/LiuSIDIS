@@ -165,7 +165,7 @@ int GetTotalRate(const double Ebeam, const char * hadron){//Estimate the total r
 
 int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char * hadron, const char * savefile)
 {
-
+//cout<<"Test 1"<<endl;
   float lumi = 1.0e+9 * pow(0.197327, 2);
   float scale_lumi = lumi/nEvents;
 
@@ -196,6 +196,7 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
   //double Xmax[6] = {0.7, 10.0, 0.7, 2.0, M_PI, M_PI}; //default from SoLID
   sidis.SetRange(Xmin, Xmax);
 
+//cout<<"Test 2"<<endl;
   TFile * fs = new TFile(savefile, "RECREATE");
   gStyle->SetOptStat(0);
   //(x, Q2)
@@ -445,7 +446,7 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       if (z < 0.3 || z > 0.7) continue;
 
       Q2 = sidis.GetVariable("Q2");
-      if (Q2 < 1.0 || Q2 > 2.5) continue;
+      //if (Q2 < 1.0 || Q2 > 2.5) continue;
 
       W = sidis.GetVariable("W");
       if (W < 2.3) continue;
@@ -454,7 +455,7 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       if (Wp < 1.6) continue;
 
       x = sidis.GetVariable("x");
-      if (x < 0.1 || x > 0.35) continue;
+      //if (x < 0.1 || x > 0.35) continue;
 
       Pt = sidis.GetVariable("Pt");
 
@@ -504,7 +505,9 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       
 
       //-----------------------------------------
-     
+      //Q2 and x cuts 
+      //if (Q2 < 1.0 || Q2 > 2.5) continue;
+      //if (x < 0.1 || x > 0.35) continue;
 
       //electron
       //cuts from LOI: theta = (10.3 - 12.4) deg, phi = (-2.28 - 2.28) deg, P = (4.0 - 5.4) GeV
