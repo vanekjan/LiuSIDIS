@@ -363,8 +363,8 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
   TH2D *lepton_theta_vs_hadron_z = new TH2D("lepton_theta_vs_hadron_z", "lepton_theta_vs_hadron_z", 180, 0, TMath::Pi(), 0.30, 0.70);
   TH2D *lepton_theta_vs_hadron_Pt = new TH2D("lepton_theta_vs_hadron_Pt", "lepton_theta_vs_hadron_Pt", 180, 0, TMath::Pi(), 0., 0.9);
   
-  TH2D *lepton_P_vs_hadron_z = new TH2D("lepton_P_vs_hadron_z", "lepton_P_vs_hadron_z", 360, -TMath::Pi(), TMath::Pi(), 0.30, 0.70);
-  TH2D *lepton_P_vs_hadron_Pt = new TH2D("lepton_P_vs_hadron_z", "lepton_P_vs_hadron_z", 1360, -TMath::Pi(), TMath::Pi(), 0., 0.9);
+  TH2D *lepton_phi_vs_hadron_z = new TH2D("lepton_phi_vs_hadron_z", "lepton_phi_vs_hadron_z", 360, -TMath::Pi(), TMath::Pi(), 0.30, 0.70);
+  TH2D *lepton_phi_vs_hadron_Pt = new TH2D("lepton_phi_vs_hadron_Pt", "lepton_phi_vs_hadron_Pt", 1360, -TMath::Pi(), TMath::Pi(), 0., 0.9);
   
   //-------
   
@@ -374,8 +374,8 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
   TH2D *lepton_theta_vs_hadron_z_cuts = new TH2D("lepton_theta_vs_hadron_z_cuts", "lepton_theta_vs_hadron_z_cuts", 180, 0, TMath::Pi(), 0.30, 0.70);
   TH2D *lepton_theta_vs_hadron_Pt_cuts = new TH2D("lepton_theta_vs_hadron_Pt_cuts", "lepton_theta_vs_hadron_Pt_cuts", 180, 0, TMath::Pi(), 0., 0.9);
   
-  TH2D *lepton_P_vs_hadron_z_cuts = new TH2D("lepton_P_vs_hadron_z_cuts", "lepton_P_vs_hadron_z_cuts", 360, -TMath::Pi(), TMath::Pi(), 0.30, 0.70);
-  TH2D *lepton_P_vs_hadron_Pt_cuts = new TH2D("lepton_P_vs_hadron_Pt_cuts", "lepton_P_vs_hadron_Pt_cuts", 1360, -TMath::Pi(), TMath::Pi(), 0., 0.9);
+  TH2D *lepton_phi_vs_hadron_z_cuts = new TH2D("lepton_phi_vs_hadron_z_cuts", "lepton_phi_vs_hadron_z_cuts", 360, -TMath::Pi(), TMath::Pi(), 0.30, 0.70);
+  TH2D *lepton_phi_vs_hadron_Pt_cuts = new TH2D("lepton_phi_vs_hadron_Pt_cuts", "lepton_phi_vs_hadron_Pt_cuts", 1360, -TMath::Pi(), TMath::Pi(), 0., 0.9);
 
   //---------------------------------------
 
