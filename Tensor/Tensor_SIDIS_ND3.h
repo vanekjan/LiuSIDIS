@@ -358,7 +358,7 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
   //histograms for compariosn of simc and SoLID SIDIS model
   
   TH2D *lepton_P_vs_hadron_z = new TH2D("lepton_P_vs_hadron_z", "lepton_P_vs_hadron_z", 100, 0, 10, 50, 0.30, 0.70);
-  TH2D *lepton_P_vs_hadron_Pt = new TH2D("lepton_P_vs_hadron_z", "lepton_P_vs_hadron_z", 100, 0, 10, 50, 0., 0.9);
+  TH2D *lepton_P_vs_hadron_Pt = new TH2D("lepton_P_vs_hadron_Pt", "lepton_P_vs_hadron_Pt", 100, 0, 10, 50, 0., 0.9);
   
   TH2D *lepton_theta_vs_hadron_z = new TH2D("lepton_theta_vs_hadron_z", "lepton_theta_vs_hadron_z", 180, 0, TMath::Pi(), 50, 0.30, 0.70);
   TH2D *lepton_theta_vs_hadron_Pt = new TH2D("lepton_theta_vs_hadron_Pt", "lepton_theta_vs_hadron_Pt", 180, 0, TMath::Pi(), 50, 0., 0.9);
