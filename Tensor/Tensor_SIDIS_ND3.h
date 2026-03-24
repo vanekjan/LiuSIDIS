@@ -344,14 +344,38 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
   TH1D *lepton_phi = new TH1D("lepton_phi", "lepton_phi", 360, -TMath::Pi(), TMath::Pi());
   TH1D *lepton_phi_cuts = new TH1D("lepton_phi_cuts", "lepton_phi_cuts", 360, -TMath::Pi(), TMath::Pi());
 
-  TH1D *lepton_theta_1 = new TH1D("lepton_theta_1", "lepton_theta_1", 360, -TMath::Pi(), TMath::Pi());
-  TH1D *lepton_theta_1_cuts = new TH1D("lepton_theta_1_cuts", "lepton_theta_1_cuts", 360, -TMath::Pi(), TMath::Pi());
+  TH1D *lepton_theta_1 = new TH1D("lepton_theta_1", "lepton_theta_1", 180, 0, TMath::Pi());
+  TH1D *lepton_theta_1_cuts = new TH1D("lepton_theta_1_cuts", "lepton_theta_1_cuts", 180, 0, TMath::Pi());
 
-  TH1D *lepton_theta_2 = new TH1D("lepton_theta_2", "lepton_theta_2", 360, -TMath::Pi(), TMath::Pi());
-  TH1D *lepton_theta_2_cuts = new TH1D("lepton_theta_2_cuts", "lepton_theta_2_cuts", 360, -TMath::Pi(), TMath::Pi());
+  TH1D *lepton_theta_2 = new TH1D("lepton_theta_2", "lepton_theta_2", 180, 0, TMath::Pi());
+  TH1D *lepton_theta_2_cuts = new TH1D("lepton_theta_2_cuts", "lepton_theta_2_cuts", 180, 0, TMath::Pi());
 
   TH1D *lepton_eta = new TH1D("lepton_eta", "lepton_eta", 100, -5, 5);
   TH1D *lepton_eta_cuts = new TH1D("lepton_eta_cuts", "lepton_eta_cuts", 100, -5, 5);
+  
+  //---------------------------------------
+  
+  //histograms for compariosn of simc and SoLID SIDIS model
+  
+  TH2D *lepton_P_vs_hadron_z = new TH2D("lepton_P_vs_hadron_z", "lepton_P_vs_hadron_z", 100, 0, 10, 50, 0.30, 0.70);
+  TH2D *lepton_P_vs_hadron_Pt = new TH2D("lepton_P_vs_hadron_z", "lepton_P_vs_hadron_z", 100, 0, 10, 50, 0., 0.9);
+  
+  TH2D *lepton_theta_vs_hadron_z = new TH2D("lepton_theta_vs_hadron_z", "lepton_theta_vs_hadron_z", 180, 0, TMath::Pi(), 0.30, 0.70);
+  TH2D *lepton_theta_vs_hadron_Pt = new TH2D("lepton_theta_vs_hadron_Pt", "lepton_theta_vs_hadron_Pt", 180, 0, TMath::Pi(), 0., 0.9);
+  
+  TH2D *lepton_P_vs_hadron_z = new TH2D("lepton_P_vs_hadron_z", "lepton_P_vs_hadron_z", 360, -TMath::Pi(), TMath::Pi(), 0.30, 0.70);
+  TH2D *lepton_P_vs_hadron_Pt = new TH2D("lepton_P_vs_hadron_z", "lepton_P_vs_hadron_z", 1360, -TMath::Pi(), TMath::Pi(), 0., 0.9);
+  
+  //-------
+  
+  TH2D *lepton_P_vs_hadron_z_cuts = new TH2D("lepton_P_vs_hadron_z_cuts", "lepton_P_vs_hadron_z_cuts", 100, 0, 10, 50, 0.30, 0.70);
+  TH2D *lepton_P_vs_hadron_Pt_cuts = new TH2D("lepton_P_vs_hadron_Pt_cuts", "lepton_P_vs_hadron_Pt_cuts", 100, 0, 10, 50, 0., 0.9);
+  
+  TH2D *lepton_theta_vs_hadron_z_cuts = new TH2D("lepton_theta_vs_hadron_z_cuts", "lepton_theta_vs_hadron_z_cuts", 180, 0, TMath::Pi(), 0.30, 0.70);
+  TH2D *lepton_theta_vs_hadron_Pt_cuts = new TH2D("lepton_theta_vs_hadron_Pt_cuts", "lepton_theta_vs_hadron_Pt_cuts", 180, 0, TMath::Pi(), 0., 0.9);
+  
+  TH2D *lepton_P_vs_hadron_z_cuts = new TH2D("lepton_P_vs_hadron_z_cuts", "lepton_P_vs_hadron_z_cuts", 360, -TMath::Pi(), TMath::Pi(), 0.30, 0.70);
+  TH2D *lepton_P_vs_hadron_Pt_cuts = new TH2D("lepton_P_vs_hadron_Pt_cuts", "lepton_P_vs_hadron_Pt_cuts", 1360, -TMath::Pi(), TMath::Pi(), 0., 0.9);
 
   //---------------------------------------
 
@@ -503,6 +527,17 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       hadron_theta_2->Fill(Ph.Theta(), weight);
       //hadron_theta_2->Fill(2*atan(exp(-Ph.Eta())), weight);
       
+      
+      //2D distributions
+      
+      lepton_P_vs_hadron_z->Fill(lp.P(), z);
+      lepton_P_vs_hadron_Pt->Fill(lp.P(), Pt);
+      
+      lepton_theta_vs_hadron_z->Fill(lp.Theta(), z);
+      lepton_theta_vs_hadron_Pt->Fill(lp.Theta(), Pt);
+      
+      lepton_phi_vs_hadron_z->Fill(lp.Phi(), z);
+      lepton_phi_vs_hadron_Pt->Fill(lp.Phi(), Pt);
 
       //-----------------------------------------
       //Q2 and x cuts 
@@ -546,6 +581,18 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       hadron_theta_1_cuts->Fill(theta_h, weight);
       hadron_theta_2_cuts->Fill(Ph.Theta(), weight);
       //hadron_theta_2_cuts->Fill(2*atan(exp(-Ph.Eta())), weight);
+      
+      
+      //2D distributions
+      
+      lepton_P_vs_hadron_z_cuts->Fill(lp.P(), z);
+      lepton_P_vs_hadron_Pt_cuts->Fill(lp.P(), Pt);
+      
+      lepton_theta_vs_hadron_z_cuts->Fill(lp.Theta(), z);
+      lepton_theta_vs_hadron_Pt_cuts->Fill(lp.Theta(), Pt);
+      
+      lepton_phi_vs_hadron_z_cuts->Fill(lp.Phi(), z);
+      lepton_phi_vs_hadron_Pt_cuts->Fill(lp.Phi(), Pt);
 
 
       //acc_FA = GetAcceptance_e(lp, "FA") * GetAcceptance_hadron(Ph, hadron);
