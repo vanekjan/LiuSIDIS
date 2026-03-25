@@ -196,8 +196,29 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
   //double Xmax[6] = {0.7, 10.0, 0.7, 2.0, M_PI, M_PI}; //default from SoLID
   sidis.SetRange(Xmin, Xmax);
 
-//cout<<"Test 2"<<endl;
+
   TFile * fs = new TFile(savefile, "RECREATE");
+  
+  //---------
+  
+  float electron_E, electron_E_prime;
+  float Q2_tree, xbj_tree;
+  float Pt_tree, z_tree;
+  
+  TTree *tensor_SIDIS_tree = new TTree("tensor_SIDIS_tree","tensor_SIDIS_tree");
+  
+  
+  tensor_SIDIS_tree->Branch("E", &electron_E, "E/F"); 
+  tensor_SIDIS_tree->Branch("E_prime", &electron_E_prime, "E_prime/F"); 
+  
+  tensor_SIDIS_tree->Branch("Q2", &Q2_tree, "Q2/F"); 
+  tensor_SIDIS_tree->Branch("xbj", &xbj_tree, "xbj/F"); 
+  
+  tensor_SIDIS_tree->Branch("Pt", &Pt_tree, "Pt/F"); 
+  tensor_SIDIS_tree->Branch("z_hadron", &z_tree, "z_hadron/F"); 
+  
+  //---------
+  
   gStyle->SetOptStat(0);
   //(x, Q2)
   TH2D * xQ2_FA = new TH2D("xQ2_FA", "", 700, 0.0, 0.7, 900, 0.0, 9.0);
@@ -486,7 +507,8 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       nEvents_event_cuts++;
 
       //-----------
-
+      
+      
       P_T_no_kine_cut_hist->Fill(Pt);
       P_T_no_kine_cut_hist_new_bins->Fill(Pt);
 
@@ -499,6 +521,21 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       Ph = sidis.GetLorentzVector("Ph");//outgoing hadron 4-momentum
 
       TLorentzVector q_4mom = l_beam - lp;
+      
+      //-----------
+      
+      electron_E = Ebeam;
+      electron_E_prime = lp.E();
+      
+      Q2_tree = Q2;
+      xbj_tree = x;
+      
+      Pt_tree = Pt;
+      z_tree = z;
+      
+      tensor_SIDIS_tree->Fill();
+      
+      //-----------
            
       //cuts
       TVector3 z_axis(0,0,1);
