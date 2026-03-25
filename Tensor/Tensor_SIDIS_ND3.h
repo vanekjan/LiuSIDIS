@@ -523,7 +523,7 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       TLorentzVector q_4mom = l_beam - lp;
       
       //-----------
-      
+/*      
       electron_E = Ebeam;
       electron_E_prime = lp.E();
       
@@ -534,7 +534,7 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       z_tree = z;
       
       tensor_SIDIS_tree->Fill();
-      
+ */     
       //-----------
            
       //cuts
@@ -597,6 +597,21 @@ int MakeKinematicCoveragePlots(const int nEvents, const double Ebeam, const char
       if( theta_h < 2.*0.0872665 || theta_h > 4.*0.0872665 ) continue; //theta = (10.0 - 20.0) deg
 
       nEvents_all_cuts++;
+      
+      //-----------
+      
+      electron_E = Ebeam;
+      electron_E_prime = lp.E();
+      
+      Q2_tree = Q2;
+      xbj_tree = x;
+      
+      Pt_tree = Pt;
+      z_tree = z;
+      
+      tensor_SIDIS_tree->Fill();
+      
+      //-----------
 
       //-----------------------------------------
       //
